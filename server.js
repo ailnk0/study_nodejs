@@ -16,3 +16,13 @@ app.get("/pet", (req, res) => {
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
+
+app.get("/write", (req, res) => {
+  res.sendFile(__dirname + "/write.html");
+});
+
+app.post("/add", (req, res) => {
+  console.log(req.body.todoForToday);
+  console.log(req.body.todoDetail);
+  res.send("Complete to add new post");
+});
