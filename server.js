@@ -38,7 +38,7 @@ async function run() {
 }
 run().catch(console.dir);
 
-async function insert(obj) {
+async function insertPost(obj) {
   try {
     await client.connect();
     const col = client.db(dbName).collection(colNames.post);
@@ -53,10 +53,10 @@ async function insert(obj) {
   }
 }
 
-async function find(colName) {
+async function findPost() {
   try {
     await client.connect();
-    const col = client.db(dbName).collection(colName);
+    const col = client.db(dbName).collection(colNames.post);
     const documents = await col.find({}).toArray();
     return documents;
   } finally {
@@ -64,11 +64,33 @@ async function find(colName) {
   }
 }
 
-async function update() {
+async function findCounter() {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colNames.counter);
+    const documents = await col.find({}).toArray();
+    return documents;
+  } finally {
+    await client.close();
+  }
+}
+
+async function updateCounter() {
   try {
     await client.connect();
     const col = client.db(dbName).collection(colNames.counter);
     await col.updateOne({ name: "total_post" }, { $inc: { total_post: 1 } });
+  } finally {
+    await client.close();
+  }
+}
+
+async function deletePost(id) {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colNames.post);
+    const result = await col.deleteOne({ _id: id });
+    return result;
   } finally {
     await client.close();
   }
@@ -93,10 +115,10 @@ app.get("/write", (req, res) => {
 });
 
 app.post("/add", (req, res) => {
-  update()
+  updateCounter()
     .catch((err) => console.log(err))
     .then(() => {
-      find(colNames.counter)
+      findCounter()
         .catch((err) => console.log(err))
         .then((doc) => {
           let index = doc[0].total_post;
@@ -106,7 +128,7 @@ app.post("/add", (req, res) => {
             todoDetail: req.body.todoDetail,
             date: new Date(),
           };
-          insert(obj)
+          insertPost(obj)
             .catch((err) => console.log(err))
             .then(() => {
               res.redirect("/list");
@@ -116,9 +138,22 @@ app.post("/add", (req, res) => {
 });
 
 app.get("/list", (req, res) => {
-  find(colNames.post)
+  findPost()
     .catch((err) => console.log(err))
     .then((doc) => {
       res.render("list.ejs", { posts: doc });
+    });
+});
+
+app.delete("/delete", (req, res) => {
+  req.body._id = parseInt(req.body._id);
+  deletePost(req.body._id)
+    .catch((err) => console.log(err))
+    .then((result) => {
+      if (result.deletedCount === 0) {
+        res.status(404).send("No document found to delete");
+      } else {
+        res.status(200).send(`${result.deletedCount} document(s) deleted`);
+      }
     });
 });
