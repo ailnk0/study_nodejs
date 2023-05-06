@@ -14,7 +14,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-async function run() {
+async function run(obj) {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
@@ -24,11 +24,12 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
-    await client
-      .db("todoapp")
-      .collection("post")
-      .insertOne({ name: "John Doe", age: 23 });
-    console.log("Data saved to MongoDB!");
+    if (obj != null) {
+      await client.db("todoapp").collection("post").insertOne(obj);
+      console.log("Data saved to MongoDB!");
+    } else {
+      console.log("There is no data to save to MongoDB!");
+    }
   } finally {
     // Ensures that the client will close when you finish/error
     await client.close();
@@ -55,7 +56,9 @@ app.get("/write", (req, res) => {
 });
 
 app.post("/add", (req, res) => {
-  console.log(req.body.todoForToday);
-  console.log(req.body.todoDetail);
-  res.send("Complete to add new post");
+  const obj = {
+    todoForToday: req.body.todoForToday,
+    todoDetail: req.body.todoDetail,
+  };
+  run(obj).catch(console.dir);
 });
