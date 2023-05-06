@@ -10,3 +10,7 @@ app.listen(8080, () => {
 app.get("/pet", (req, res) => {
   res.send("This is pet page");
 });
+
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
+});
