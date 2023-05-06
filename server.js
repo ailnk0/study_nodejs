@@ -15,7 +15,10 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-async function run(obj) {
+const dbName = "todoapp";
+const colName = "post";
+
+async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
@@ -24,19 +27,38 @@ async function run(obj) {
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
-
-    if (obj != null) {
-      await client.db("todoapp").collection("post").insertOne(obj);
-      console.log("Data saved to MongoDB!");
-    } else {
-      console.log("There is no data to save to MongoDB!");
-    }
   } finally {
     // Ensures that the client will close when you finish/error
     await client.close();
   }
 }
 run().catch(console.dir);
+
+async function insert(obj) {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colName);
+    if (obj != null) {
+      await col.insertOne(obj);
+      console.log("Data saved to MongoDB!");
+    } else {
+      console.log("There is no data to save to MongoDB!");
+    }
+  } finally {
+    await client.close();
+  }
+}
+
+async function find() {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colName);
+    const documents = await col.find({}).toArray();
+    return documents;
+  } finally {
+    await client.close();
+  }
+}
 
 app.listen(8080, () => {
   console.log("Server running on port 8080");
@@ -60,6 +82,16 @@ app.post("/add", (req, res) => {
   const obj = {
     todoForToday: req.body.todoForToday,
     todoDetail: req.body.todoDetail,
+    date: new Date(),
   };
-  run(obj).catch(console.dir);
+  insert(obj)
+    .catch(console.dir)
+    .finally(() => res.redirect("/list"));
+});
+
+app.get("/list", (req, res) => {
+  find().then((doc) => {
+    console.log(doc);
+    res.render("list.ejs", { posts: doc });
+  });
 });

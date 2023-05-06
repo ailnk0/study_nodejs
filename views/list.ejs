@@ -45,19 +45,36 @@
 
   <div class="container mt-5">
     <div>
-      <h1>기록해도 안할 거 알지만</h1>
+      <h1>오늘의 할일</h1>
     </div>
-    <form action="/add" method="POST">
-      <div class="form-group">
-        <label for="todoForToday">오늘의 할일</label>
-        <input type="text" class="form-control" id="todoForToday" name="todoForToday">
-      </div>
-      <div class="form-group">
-        <label for="todoDetail">세부 내용</label>
-        <input type="text" class="form-control" id="todoDetail" name="todoDetail">
-      </div>
-      <button type="submit" class="btn btn-primary">저장하기</button>
-    </form>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">No.</th>
+          <th scope="col">할일</th>
+          <th scope="col">세부 내용</th>
+          <th scope="col">작성일</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let i=0, n=posts.length; i < n; i++) { %>
+          <tr>
+            <th scope="row">
+              <%= i + 1 %>
+            </th>
+            <td>
+              <%= posts[i].todoForToday %>
+            </td>
+            <td>
+              <%= posts[i].todoDetail %>
+            </td>
+            <td>
+              <%= posts[i].date %>
+            </td>
+          </tr>
+          <% } %>
+      </tbody>
+    </table>
   </div>
 
 
