@@ -60,7 +60,7 @@
         <% for (let i=0, n=posts.length; i < n; i++) { %>
           <tr>
             <th scope="row">
-              <%= i + 1 %>
+              <%= posts[i]._id %>
             </th>
             <td>
               <%= posts[i].todoForToday %>
