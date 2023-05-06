@@ -23,6 +23,12 @@ async function run() {
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+
+    await client
+      .db("todoapp")
+      .collection("post")
+      .insertOne({ name: "John Doe", age: 23 });
+    console.log("Data saved to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     await client.close();
