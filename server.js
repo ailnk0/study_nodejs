@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
+app.use("/public", express.static("public"));
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri =
