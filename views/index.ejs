@@ -19,50 +19,22 @@
     <%- include('nav.ejs') %>
   </div>
 
-  <div class="container mt-5">
-    <div class="card mx-5">
-      <img src="https://picsum.photos/1500/1500" class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">
-          <%= post.todoForToday %>
-        </h5>
-        <p class="card-text">
-          <%= post.todoDetail %>
-        </p>
-        <small class="text-secondary">
-          <%= post.date %>
-        </small>
-        <div class="d-flex justify-content-end">
-          <div class="btn-group" role="group" aria-label="Basic outlined example">
-            <button type="button" class="edit btn btn-sm btn-outline-dark" data-id="<%= post._id %>">edit</button>
-            <button type="button" class="delete btn btn-sm btn-outline-dark" data-id="<%= post._id %>">delete</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="jumbotron">
+    <h1 class="display-4">Hello, world!</h1>
+    <p class="lead">This is a simple hero unit, a simple jumbotron-style component for calling extra attention to
+      featured content or information.</p>
+    <hr class="my-4">
+    <p>It uses utility classes for typography and spacing to space content out within the larger container.</p>
+    <a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a>
   </div>
 
+
   <!-- Optional JavaScript; choose one of the two! -->
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
-    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
-  <script>
-    $('.delete').on('click', function (e) {
-      const id = e.target.dataset.id;
-      $.ajax({
-        url: '/delete',
-        method: 'DELETE',
-        data: {
-          _id: id
-        }
-      }).done(function (response) {
-        window.location.href = "/list";
-      }).fail(function (error) {
-        console.log(error);
-      })
-    });
-  </script>
 
   <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
     crossorigin="anonymous"></script>
