@@ -53,11 +53,22 @@ async function insertPost(obj) {
   }
 }
 
-async function findPost() {
+async function findPosts() {
   try {
     await client.connect();
     const col = client.db(dbName).collection(colNames.post);
     const documents = await col.find({}).toArray();
+    return documents;
+  } finally {
+    await client.close();
+  }
+}
+
+async function findPost(id) {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colNames.post);
+    const documents = await col.findOne({ _id: id });
     return documents;
   } finally {
     await client.close();
@@ -138,7 +149,7 @@ app.post("/add", (req, res) => {
 });
 
 app.get("/list", (req, res) => {
-  findPost()
+  findPosts()
     .catch((err) => console.log(err))
     .then((doc) => {
       res.render("list.ejs", { posts: doc });
@@ -155,5 +166,14 @@ app.delete("/delete", (req, res) => {
       } else {
         res.status(200).send(`${result.deletedCount} document(s) deleted`);
       }
+    });
+});
+
+app.get("/detail/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  findPost(id)
+    .catch((err) => console.log(err))
+    .then((doc) => {
+      res.render("detail.ejs", { post: doc });
     });
 });
