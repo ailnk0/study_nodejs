@@ -210,16 +210,12 @@ app.get("/edit/:id", (req, res) => {
     });
 });
 
-app.put("/update", (req, res) => {
+app.put("/edit", (req, res) => {
   req.body._id = parseInt(req.body._id);
   req.body.date = new Date();
   updatePost(req.body._id, req.body)
     .catch((err) => console.log(err))
     .then((result) => {
-      if (result.modifiedCount === 0) {
-        res.status(404).send("No document found to edit");
-      } else {
-        res.status(200).send(`${result.deletedCount} document(s) edited`);
-      }
+      res.redirect("/detail/" + req.body._id);
     });
 });

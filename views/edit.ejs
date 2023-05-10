@@ -25,7 +25,8 @@
     <div>
       <h1>기록해도 안할 거 알지만</h1>
     </div>
-    <div>
+    <form action="/edit?_method=PUT" method="POST">
+      <input class="d-none" value="<%= post._id %>" name="_id">
       <div class="form-group">
         <label for="todoForToday">오늘의 할일</label>
         <input type="text" class="form-control" id="todoForToday" name="todoForToday" value="<%= post.todoForToday %>">
@@ -36,12 +37,12 @@
       </div>
       <div class="d-flex justify-content-end">
         <div>
-          <button class="edit btn btn-sm btn-outline-primary">수정하기</button>
+          <button type="submit" class="edit btn btn-sm btn-outline-primary">수정하기</button>
           <button class="cancel btn btn-sm btn-outline-danger">취소하기</button>
         </div>
       </div>
-    </div>
   </div>
+  </form>
 
 
   <!-- Optional JavaScript; choose one of the two! -->
@@ -49,26 +50,9 @@
     integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
   <script>
     const id = "<%= post._id %>";
-
-    $('.edit').on('click', function (e) {
-      $.ajax({
-        url: '/update',
-        method: 'PUT',
-        data: {
-          _id: id,
-          todoForToday: $('#todoForToday').val(),
-          todoDetail: $('#todoDetail').val(),
-          date: new Date()
-        }
-      }).done(function (response) {
-        window.location.href = "/detail/" + id;
-      }).fail(function (error) {
-        console.log(error);
-      });
-    });
-
     $('.cancel').on('click', function (e) {
       window.location.href = "/detail/" + id;
+      return false;
     });
   </script>
 
