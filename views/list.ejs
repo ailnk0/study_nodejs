@@ -22,8 +22,9 @@
   </div>
 
   <div class="container mt-5">
-    <div>
+    <div class="d-flex justify-content-between">
       <h1>오늘의 할일</h1>
+      <a class="btn btn-outline-primary m-2 px-3" href="/write">Write</a>
     </div>
     <table class="table">
       <thead>
@@ -52,7 +53,9 @@
               </a>
             </td>
             <td>
-              <%= posts[i].date.toLocaleString(); %>
+              <small class="text-muted">
+                <%= posts[i].date.toLocaleString(); %>
+              </small>
             </td>
             <td>
               <button class="delete btn btn-outline-danger btn-sm border-0" data-id="<%= posts[i]._id %>">✕</button>

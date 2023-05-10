@@ -1,12 +1,22 @@
 const express = require("express");
 const app = express();
-const bodyParser = require("body-parser");
-const methodOverride = require("method-override");
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.set("view engine", "ejs");
 app.use("/public", express.static("public"));
+app.set("view engine", "ejs");
+
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const methodOverride = require("method-override");
 app.use(methodOverride("_method"));
+
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const session = require("express-session");
+app.use(
+  session({ secret: "keyboard cat", resave: false, saveUninitialized: false })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri =
@@ -20,10 +30,10 @@ const client = new MongoClient(uri, {
   },
 });
 const dbName = "todoapp";
-
 const colNames = {
   post: "post",
   counter: "counter",
+  users: "users",
 };
 
 async function run() {
@@ -73,6 +83,17 @@ async function findPost(id) {
     await client.connect();
     const col = client.db(dbName).collection(colNames.post);
     const documents = await col.findOne({ _id: id });
+    return documents;
+  } finally {
+    await client.close();
+  }
+}
+
+async function findUser(email_id) {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colNames.users);
+    const documents = await col.findOne({ email: email_id });
     return documents;
   } finally {
     await client.close();
@@ -145,7 +166,7 @@ app.get("/", (req, res) => {
   res.render("index.ejs");
 });
 
-app.get("/write", (req, res) => {
+app.get("/write", isLogin, (req, res) => {
   res.render("write.ejs");
 });
 
@@ -180,7 +201,7 @@ app.get("/list", (req, res) => {
     });
 });
 
-app.delete("/delete", (req, res) => {
+app.delete("/delete", isLogin, (req, res) => {
   req.body._id = parseInt(req.body._id);
   deletePost(req.body._id)
     .catch((err) => console.log(err))
@@ -202,7 +223,7 @@ app.get("/detail/:id", (req, res) => {
     });
 });
 
-app.get("/edit/:id", (req, res) => {
+app.get("/edit/:id", isLogin, (req, res) => {
   const id = parseInt(req.params.id);
   findPost(id)
     .catch((err) => console.log(err))
@@ -221,12 +242,84 @@ app.put("/edit", (req, res) => {
     });
 });
 
-// middleware
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const session = require("express-session");
-app.use(
-  session({ secret: "keyboard cat", resave: true, saveUninitialized: false })
+app.get("/login-fail", (req, res) => {
+  res.send("Failed to login");
+});
+
+app.get("/is-login", (req, res) => {
+  console.log(req.user);
+  if (req.user) {
+    res.status(200).send({ result: req.user });
+  } else {
+    res.status(404).send("is not login");
+  }
+});
+
+app.get("/login", (req, res) => {
+  res.render("login.ejs");
+});
+
+app.get("/logout", (req, res) => {
+  req.logout((err) => {
+    console.log(err);
+    res.redirect("/");
+  });
+});
+
+app.post(
+  "/login",
+  passport.authenticate("local", { failureRedirect: "/login-fail" }),
+  (req, res) => {
+    res.redirect("/");
+  }
 );
-app.use(passport.initialize());
-app.use(passport.session());
+
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "email",
+      passwordField: "pw",
+      session: true,
+      passReqToCallback: false,
+    },
+    function (email, pw, done) {
+      findUser(email)
+        .catch((err) => {
+          console.log(err);
+          return done(err);
+        })
+        .then((doc) => {
+          if (!doc)
+            return done(null, false, { message: "존재하지않는 아이디요" });
+          if (pw == doc.password) {
+            return done(null, doc);
+          } else {
+            return done(null, false, { message: "비번틀렸어요" });
+          }
+        });
+    }
+  )
+);
+
+passport.serializeUser(function (user, done) {
+  done(null, user.email);
+});
+
+passport.deserializeUser(function (email, done) {
+  findUser(email)
+    .catch((err) => {
+      console.log(err);
+      return done(err);
+    })
+    .then((doc) => {
+      done(null, doc);
+    });
+});
+
+function isLogin(req, res, next) {
+  if (req.user) {
+    next();
+  } else {
+    res.redirect("/login");
+  }
+}
