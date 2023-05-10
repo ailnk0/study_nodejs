@@ -247,12 +247,7 @@ app.get("/login-fail", (req, res) => {
 });
 
 app.get("/is-login", (req, res) => {
-  console.log(req.user);
-  if (req.user) {
-    res.status(200).send({ result: req.user });
-  } else {
-    res.status(404).send("is not login");
-  }
+  res.status(200).send({ result: req.user });
 });
 
 app.get("/login", (req, res) => {
