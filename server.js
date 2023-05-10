@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 app.use("/public", express.static("public"));
@@ -19,8 +21,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri =
-  "mongodb+srv://ailnk0:p52OD5ZpiEJdq412@cluster0.86dc03b.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.DB_URL;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -152,8 +153,8 @@ async function updatePost(id, obj) {
   }
 }
 
-app.listen(8080, () => {
-  console.log("Server running on port 8080");
+app.listen(process.env.PORT, () => {
+  console.log("Server running on port " + process.env.PORT);
 });
 
 // if someone visit to /pet,
