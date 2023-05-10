@@ -22,50 +22,53 @@
   </div>
 
   <div class="container mt-5">
-    <div class="card mx-5">
-      <img src="https://picsum.photos/1500/1500" class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">
-          <%= post.todoForToday %>
-        </h5>
-        <p class="card-text">
-          <%= post.todoDetail %>
-        </p>
-        <small class="text-secondary">
-          <%= post.date.toLocaleString() %>
-        </small>
-        <div class="d-flex justify-content-end">
-          <div class="btn-group" role="group" aria-label="Basic outlined example">
-            <button type="button" class="edit btn btn-sm btn-outline-dark" data-id="<%= post._id %>">edit</button>
-            <button type="button" class="delete btn btn-sm btn-outline-dark" data-id="<%= post._id %>">delete</button>
-          </div>
+    <div>
+      <h1>기록해도 안할 거 알지만</h1>
+    </div>
+    <div>
+      <div class="form-group">
+        <label for="todoForToday">오늘의 할일</label>
+        <input type="text" class="form-control" id="todoForToday" name="todoForToday" value="<%= post.todoForToday %>">
+      </div>
+      <div class="form-group">
+        <label for="todoDetail">세부 내용</label>
+        <input type="text" class="form-control" id="todoDetail" name="todoDetail" value="<%= post.todoDetail %>">
+      </div>
+      <div class="d-flex justify-content-end">
+        <div>
+          <button class="edit btn btn-sm btn-outline-primary">수정하기</button>
+          <button class="cancel btn btn-sm btn-outline-danger">취소하기</button>
         </div>
       </div>
     </div>
   </div>
 
+
   <!-- Optional JavaScript; choose one of the two! -->
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"
     integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
   <script>
-    $('.delete').on('click', function (e) {
-      const id = e.target.dataset.id;
-      $.ajax({
-        url: '/delete',
-        method: 'DELETE',
-        data: {
-          _id: id
-        }
-      }).done(function (response) {
-        window.location.href = "/list";
-      }).fail(function (error) {
-        console.log(error);
-      })
-    });
+    const id = "<%= post._id %>";
 
     $('.edit').on('click', function (e) {
-      const id = e.target.dataset.id;
-      window.location.href = "/edit/" + id;
+      $.ajax({
+        url: '/update',
+        method: 'PUT',
+        data: {
+          _id: id,
+          todoForToday: $('#todoForToday').val(),
+          todoDetail: $('#todoDetail').val(),
+          date: new Date()
+        }
+      }).done(function (response) {
+        window.location.href = "/detail/" + id;
+      }).fail(function (error) {
+        console.log(error);
+      });
+    });
+
+    $('.cancel').on('click', function (e) {
+      window.location.href = "/detail/" + id;
     });
   </script>
 

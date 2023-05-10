@@ -108,6 +108,26 @@ async function deletePost(id) {
   }
 }
 
+async function updatePost(id, obj) {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colNames.post);
+    const result = await col.updateOne(
+      { _id: id },
+      {
+        $set: {
+          todoDetail: obj.todoDetail,
+          todoForToday: obj.todoForToday,
+          date: obj.date,
+        },
+      }
+    );
+    return result;
+  } finally {
+    await client.close();
+  }
+}
+
 app.listen(8080, () => {
   console.log("Server running on port 8080");
 });
@@ -176,5 +196,28 @@ app.get("/detail/:id", (req, res) => {
     .catch((err) => console.log(err))
     .then((doc) => {
       res.render("detail.ejs", { post: doc });
+    });
+});
+
+app.get("/edit/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  findPost(id)
+    .catch((err) => console.log(err))
+    .then((doc) => {
+      res.render("edit.ejs", { post: doc });
+    });
+});
+
+app.put("/update", (req, res) => {
+  req.body._id = parseInt(req.body._id);
+  req.body.date = new Date();
+  updatePost(req.body._id, req.body)
+    .catch((err) => console.log(err))
+    .then((result) => {
+      if (result.modifiedCount === 0) {
+        res.status(404).send("No document found to edit");
+      } else {
+        res.status(200).send(`${result.deletedCount} document(s) edited`);
+      }
     });
 });
