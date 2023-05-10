@@ -54,13 +54,12 @@ async function run() {
 }
 run().catch(console.dir);
 
-async function insertPost(obj) {
+async function insertOne(colName, query) {
   try {
     await client.connect();
-    const col = client.db(dbName).collection(colNames.post);
-    if (obj != null) {
-      await col.insertOne(obj);
-      console.log("Data saved to MongoDB!");
+    const col = client.db(dbName).collection(colName);
+    if (query != null) {
+      await col.insertOne(query);
     } else {
       console.log("There is no data to save to MongoDB!");
     }
@@ -69,85 +68,43 @@ async function insertPost(obj) {
   }
 }
 
-async function findPosts() {
+async function find(colName, query) {
   try {
     await client.connect();
-    const col = client.db(dbName).collection(colNames.post);
-    const documents = await col.find({}).toArray();
+    const col = client.db(dbName).collection(colName);
+    const documents = await col.find(query).toArray();
     return documents;
   } finally {
     await client.close();
   }
 }
 
-async function findPost(id) {
+async function findOne(colName, query) {
   try {
     await client.connect();
-    const col = client.db(dbName).collection(colNames.post);
-    const documents = await col.findOne({ _id: id });
+    const col = client.db(dbName).collection(colName);
+    const documents = await col.findOne(query);
     return documents;
   } finally {
     await client.close();
   }
 }
 
-async function findUser(email_id) {
+async function updateOne(colName, query, updateQuery) {
   try {
     await client.connect();
-    const col = client.db(dbName).collection(colNames.users);
-    const documents = await col.findOne({ email: email_id });
-    return documents;
+    const col = client.db(dbName).collection(colName);
+    await col.updateOne(query, updateQuery);
   } finally {
     await client.close();
   }
 }
 
-async function findCounter() {
+async function deleteOne(colName, query) {
   try {
     await client.connect();
-    const col = client.db(dbName).collection(colNames.counter);
-    const documents = await col.find({}).toArray();
-    return documents;
-  } finally {
-    await client.close();
-  }
-}
-
-async function updateCounter() {
-  try {
-    await client.connect();
-    const col = client.db(dbName).collection(colNames.counter);
-    await col.updateOne({ name: "total_post" }, { $inc: { total_post: 1 } });
-  } finally {
-    await client.close();
-  }
-}
-
-async function deletePost(id) {
-  try {
-    await client.connect();
-    const col = client.db(dbName).collection(colNames.post);
-    const result = await col.deleteOne({ _id: id });
-    return result;
-  } finally {
-    await client.close();
-  }
-}
-
-async function updatePost(id, obj) {
-  try {
-    await client.connect();
-    const col = client.db(dbName).collection(colNames.post);
-    const result = await col.updateOne(
-      { _id: id },
-      {
-        $set: {
-          todoDetail: obj.todoDetail,
-          todoForToday: obj.todoForToday,
-          date: obj.date,
-        },
-      }
-    );
+    const col = client.db(dbName).collection(colName);
+    const result = await col.deleteOne(query);
     return result;
   } finally {
     await client.close();
@@ -173,20 +130,24 @@ app.get("/write", isLogin, (req, res) => {
 });
 
 app.post("/add", (req, res) => {
-  updateCounter()
+  updateOne(
+    colNames.counter,
+    { name: "total_post" },
+    { $inc: { total_post: 1 } }
+  )
     .catch((err) => console.log(err))
     .then(() => {
-      findCounter()
+      find(colNames.counter, { name: "total_post" })
         .catch((err) => console.log(err))
         .then((doc) => {
           let index = doc[0].total_post;
-          const obj = {
+          const query = {
             _id: index,
             todoForToday: req.body.todoForToday,
             todoDetail: req.body.todoDetail,
             date: new Date(),
           };
-          insertPost(obj)
+          insertOne(colNames.post, query)
             .catch((err) => console.log(err))
             .then(() => {
               res.redirect("/list");
@@ -196,7 +157,7 @@ app.post("/add", (req, res) => {
 });
 
 app.get("/list", (req, res) => {
-  findPosts()
+  find(colNames.post)
     .catch((err) => console.log(err))
     .then((doc) => {
       res.render("list.ejs", { posts: doc });
@@ -205,7 +166,7 @@ app.get("/list", (req, res) => {
 
 app.delete("/delete", isLogin, (req, res) => {
   req.body._id = parseInt(req.body._id);
-  deletePost(req.body._id)
+  deleteOne(colNames.post, { _id: req.body._id })
     .catch((err) => console.log(err))
     .then((result) => {
       if (result.deletedCount === 0) {
@@ -218,7 +179,7 @@ app.delete("/delete", isLogin, (req, res) => {
 
 app.get("/detail/:id", (req, res) => {
   const id = parseInt(req.params.id);
-  findPost(id)
+  findOne(colNames.post, { _id: id })
     .catch((err) => console.log(err))
     .then((doc) => {
       res.render("detail.ejs", { post: doc });
@@ -227,7 +188,7 @@ app.get("/detail/:id", (req, res) => {
 
 app.get("/edit/:id", isLogin, (req, res) => {
   const id = parseInt(req.params.id);
-  findPost(id)
+  findOne(colNames.post, { _id: id })
     .catch((err) => console.log(err))
     .then((doc) => {
       res.render("edit.ejs", { post: doc });
@@ -237,9 +198,9 @@ app.get("/edit/:id", isLogin, (req, res) => {
 app.put("/edit", (req, res) => {
   req.body._id = parseInt(req.body._id);
   req.body.date = new Date();
-  updatePost(req.body._id, req.body)
+  updateOne(colNames.post, { _id: req.body._id }, req.body)
     .catch((err) => console.log(err))
-    .then((result) => {
+    .then(() => {
       res.redirect("/detail/" + req.body._id);
     });
 });
@@ -271,6 +232,15 @@ app.post(
   }
 );
 
+app.get("/search", (req, res) => {
+  find(colNames.post, { todoForToday: req.query.value })
+    .catch((err) => console.log(err))
+    .then((doc) => {
+      console.log(doc);
+      res.render("search-list.ejs", { posts: doc });
+    });
+});
+
 passport.use(
   new LocalStrategy(
     {
@@ -280,7 +250,7 @@ passport.use(
       passReqToCallback: false,
     },
     function (email, pw, done) {
-      findUser(email)
+      findOne(colNames.users, { email: email })
         .catch((err) => {
           console.log(err);
           return done(err);
@@ -303,7 +273,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (email, done) {
-  findUser(email)
+  findOne(colNames.users, { email: email })
     .catch((err) => {
       console.log(err);
       return done(err);

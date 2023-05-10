@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="/public/main.css">
+
+  <title>Hello, world!</title>
+</head>
+
+<body>
+
+  <div>
+    <%- include('nav.ejs') %>
+  </div>
+
+  <div class="container mt-5">
+    <div class="d-flex justify-content-between">
+      <h1>오늘의 할일</h1>
+      <a class="btn btn-outline-primary m-2 px-3" href="/write">Write</a>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">No.</th>
+          <th scope="col">할일</th>
+          <th scope="col">세부 내용</th>
+          <th scope="col">작성일</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let i=0, n=posts.length; i < n; i++) { %>
+          <tr>
+            <th scope="row">
+              <%= posts[i]._id %>
+            </th>
+            <td>
+              <a class="text-dark" href="/detail/<%= posts[i]._id %>">
+                <%= posts[i].todoForToday %>
+              </a>
+            </td>
+            <td>
+              <a class="text-dark" href="/detail/<%= posts[i]._id %>">
+                <%= posts[i].todoDetail %>
+              </a>
+            </td>
+            <td>
+              <small class="text-muted">
+                <%= posts[i].date.toLocaleString(); %>
+              </small>
+            </td>
+            <td>
+              <button class="delete btn btn-outline-danger btn-sm border-0" data-id="<%= posts[i]._id %>">✕</button>
+            </td>
+          </tr>
+          <% } %>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- Optional JavaScript; choose one of the two! -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <script>
+    $('.delete').on('click', function (e) {
+      const id = e.target.dataset.id;
+      $.ajax({
+        url: '/delete',
+        method: 'DELETE',
+        data: {
+          _id: id
+        }
+      }).done(function (response) {
+        $(e.target).parent().parent().fadeOut();
+      }).fail(function (error) {
+        console.log(error);
+      })
+    });
+  </script>
+
+  <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+    crossorigin="anonymous"></script>
+
+  <!-- Option 2: Separate Popper and Bootstrap JS -->
+  <!--
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+    -->
+</body>
+
+</html>
