@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const methodOverride = require("method-override");
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.use("/public", express.static("public"));
@@ -219,3 +220,13 @@ app.put("/edit", (req, res) => {
       res.redirect("/detail/" + req.body._id);
     });
 });
+
+// middleware
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const session = require("express-session");
+app.use(
+  session({ secret: "keyboard cat", resave: true, saveUninitialized: false })
+);
+app.use(passport.initialize());
+app.use(passport.session());
