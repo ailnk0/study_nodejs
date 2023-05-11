@@ -53,11 +53,11 @@
   }
   checkLogin();
 
-  // search
   $('.btn-search').on('click', function (e) {
     e.preventDefault();
     const keyword = $('.key-search').val();
-    window.location.href = "/search?value=" + keyword;
+    const params = { value: keyword };
+    window.location.href = "/search?" + $.param(params);
   });
 
 </script>

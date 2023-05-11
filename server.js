@@ -27,7 +27,7 @@ const uri = process.env.DB_URL || "mongodb://localhost:27017";
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
-    strict: true,
+    strict: false,
     deprecationErrors: true,
   },
 });
@@ -105,6 +105,17 @@ async function deleteOne(colName, query) {
     await client.connect();
     const col = client.db(dbName).collection(colName);
     const result = await col.deleteOne(query);
+    return result;
+  } finally {
+    await client.close();
+  }
+}
+
+async function aggregate(colName, pipeline) {
+  try {
+    await client.connect();
+    const col = client.db(dbName).collection(colName);
+    const result = await col.aggregate(pipeline).toArray();
     return result;
   } finally {
     await client.close();
@@ -233,10 +244,30 @@ app.post(
 );
 
 app.get("/search", (req, res) => {
-  find(colNames.post, { todoForToday: req.query.value })
+  const pipeline = [
+    {
+      $search: {
+        index: "todoForToday",
+        text: {
+          query: req.query.value,
+          path: ["todoForToday", "todoDetail"],
+        },
+      },
+    },
+    {
+      $limit: 5,
+    },
+    {
+      $project: {
+        todoForToday: 1,
+        todoDetail: 1,
+        date: 1,
+      },
+    },
+  ];
+  aggregate(colNames.post, pipeline)
     .catch((err) => console.log(err))
     .then((doc) => {
-      console.log(doc);
       res.render("search-list.ejs", { posts: doc });
     });
 });
