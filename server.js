@@ -21,6 +21,48 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "email",
+      passwordField: "pw",
+      session: true,
+      passReqToCallback: false,
+    },
+    function (email, pw, done) {
+      findOne(colNames.users, { email: email })
+        .catch((err) => {
+          console.log(err);
+          return done(err);
+        })
+        .then((doc) => {
+          if (!doc) {
+            return done(null, false, { message: "존재하지않는 아이디요" });
+          } else if (pw == doc.pw) {
+            return done(null, doc);
+          } else {
+            return done(null, false, { message: "비번틀렸어요" });
+          }
+        });
+    }
+  )
+);
+
+passport.serializeUser(function (user, done) {
+  done(null, user.email);
+});
+
+passport.deserializeUser(function (email, done) {
+  findOne(colNames.users, { email: email })
+    .catch((err) => {
+      console.log(err);
+      return done(err);
+    })
+    .then((doc) => {
+      done(null, doc);
+    });
+});
+
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = process.env.DB_URL || "mongodb://localhost:27017";
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -105,6 +147,7 @@ async function deleteOne(colName, query) {
     await client.connect();
     const col = client.db(dbName).collection(colName);
     const result = await col.deleteOne(query);
+    console.log(result);
     return result;
   } finally {
     await client.close();
@@ -119,6 +162,14 @@ async function aggregate(colName, pipeline) {
     return result;
   } finally {
     await client.close();
+  }
+}
+
+function isLogin(req, res, next) {
+  if (req.user) {
+    next();
+  } else {
+    res.redirect("/login");
   }
 }
 
@@ -157,6 +208,8 @@ app.post("/add", (req, res) => {
             todoForToday: req.body.todoForToday,
             todoDetail: req.body.todoDetail,
             date: new Date(),
+            writer_id: req.user._id,
+            writer_email: req.user.email,
           };
           insertOne(colNames.post, query)
             .catch((err) => console.log(err))
@@ -177,7 +230,8 @@ app.get("/list", (req, res) => {
 
 app.delete("/delete", isLogin, (req, res) => {
   req.body._id = parseInt(req.body._id);
-  deleteOne(colNames.post, { _id: req.body._id })
+  const query = { _id: req.body._id, writer_id: req.user._id };
+  deleteOne(colNames.post, query)
     .catch((err) => console.log(err))
     .then((result) => {
       if (result.deletedCount === 0) {
@@ -193,16 +247,25 @@ app.get("/detail/:id", (req, res) => {
   findOne(colNames.post, { _id: id })
     .catch((err) => console.log(err))
     .then((doc) => {
-      res.render("detail.ejs", { post: doc });
+      if (doc) {
+        res.render("detail.ejs", { post: doc });
+      } else {
+        res.status(404).send("No document found");
+      }
     });
 });
 
 app.get("/edit/:id", isLogin, (req, res) => {
   const id = parseInt(req.params.id);
-  findOne(colNames.post, { _id: id })
+  const query = { _id: id, writer_id: req.user._id };
+  findOne(colNames.post, query)
     .catch((err) => console.log(err))
     .then((doc) => {
-      res.render("edit.ejs", { post: doc });
+      if (doc) {
+        res.render("edit.ejs", { post: doc });
+      } else {
+        res.status(404).send("No document found or Not allowed edit");
+      }
     });
 });
 
@@ -224,15 +287,15 @@ app.get("/is-login", (req, res) => {
   res.status(200).send({ result: req.user });
 });
 
-app.get("/login", (req, res) => {
-  res.render("login.ejs");
-});
-
 app.get("/logout", (req, res) => {
   req.logout((err) => {
     console.log(err);
     res.redirect("/");
   });
+});
+
+app.get("/login", (req, res) => {
+  res.render("login.ejs");
 });
 
 app.post(
@@ -262,6 +325,8 @@ app.get("/search", (req, res) => {
         todoForToday: 1,
         todoDetail: 1,
         date: 1,
+        writer_email: 1,
+        writer_id: 1,
       },
     },
   ];
@@ -272,52 +337,20 @@ app.get("/search", (req, res) => {
     });
 });
 
-passport.use(
-  new LocalStrategy(
-    {
-      usernameField: "email",
-      passwordField: "pw",
-      session: true,
-      passReqToCallback: false,
-    },
-    function (email, pw, done) {
-      findOne(colNames.users, { email: email })
-        .catch((err) => {
-          console.log(err);
-          return done(err);
-        })
-        .then((doc) => {
-          if (!doc)
-            return done(null, false, { message: "존재하지않는 아이디요" });
-          if (pw == doc.password) {
-            return done(null, doc);
-          } else {
-            return done(null, false, { message: "비번틀렸어요" });
-          }
-        });
-    }
-  )
-);
-
-passport.serializeUser(function (user, done) {
-  done(null, user.email);
+app.get("/signup", (req, res) => {
+  res.render("signup.ejs");
 });
 
-passport.deserializeUser(function (email, done) {
-  findOne(colNames.users, { email: email })
-    .catch((err) => {
-      console.log(err);
-      return done(err);
-    })
+app.post("/signup", (req, res) => {
+  find(colNames.users, { email: req.body.email })
+    .catch((err) => console.log(err))
     .then((doc) => {
-      done(null, doc);
+      if (doc.length == 0) {
+        insertOne(colNames.users, req.body)
+          .catch((err) => console.log(err))
+          .then(() => {
+            res.redirect("/");
+          });
+      }
     });
 });
-
-function isLogin(req, res, next) {
-  if (req.user) {
-    next();
-  } else {
-    res.redirect("/login");
-  }
-}

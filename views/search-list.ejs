@@ -32,6 +32,7 @@
           <th scope="col">No.</th>
           <th scope="col">할일</th>
           <th scope="col">세부 내용</th>
+          <th scope="col">작성자</th>
           <th scope="col">작성일</th>
           <th scope="col"></th>
         </tr>
@@ -50,6 +51,11 @@
             <td>
               <a class="text-dark" href="/detail/<%= posts[i]._id %>">
                 <%= posts[i].todoDetail %>
+              </a>
+            </td>
+            <td>
+              <a class="text-dark" href="/profile/<%= posts[i].writer_id %>">
+                <%= posts[i].writer_email %>
               </a>
             </td>
             <td>

@@ -32,6 +32,7 @@
           <th scope="col">No.</th>
           <th scope="col">할일</th>
           <th scope="col">세부 내용</th>
+          <th scope="col">작성자</th>
           <th scope="col">작성일</th>
           <th scope="col"></th>
         </tr>
@@ -53,8 +54,13 @@
               </a>
             </td>
             <td>
+              <a class="text-dark" href="/profile/<%= posts[i].writer_id %>">
+                <%= posts[i].writer_email %>
+              </a>
+            </td>
+            <td>
               <small class="text-muted">
-                <%= posts[i].date.toLocaleString(); %>
+                <%= posts[i].date.toLocaleString() %>
               </small>
             </td>
             <td>
