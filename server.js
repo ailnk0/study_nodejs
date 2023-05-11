@@ -13,6 +13,29 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const methodOverride = require("method-override");
 app.use(methodOverride("_method"));
 
+const multer = require("multer");
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./public/image");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({
+  storage: storage,
+  // fileFilter: function (req, file, callback) {
+  //   var ext = path.extname(file.originalname);
+  //   if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg") {
+  //     return callback(new Error("PNG, JPG만 업로드하세요"));
+  //   }
+  //   callback(null, true);
+  // },
+  // limits: {
+  //   fileSize: 1024 * 1024,
+  // },
+});
+
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
@@ -192,7 +215,7 @@ app.get("/write", isLogin, (req, res) => {
   res.render("write.ejs");
 });
 
-app.post("/add", (req, res) => {
+app.post("/add", upload.single("todoImage"), (req, res) => {
   updateOne(
     colNames.counter,
     { name: "total_post" },
@@ -354,4 +377,8 @@ app.post("/signup", (req, res) => {
           });
       }
     });
+});
+
+app.get("/image/:imageName", (req, res) => {
+  res.sendFile(__dirname + "/public/image/" + req.params.imageName);
 });
